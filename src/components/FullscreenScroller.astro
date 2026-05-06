@@ -1,0 +1,248 @@
+---
+const slides = [
+	{
+		label: '01',
+		title: 'Tu nombre',
+		description: 'Full-stack developer',
+		background: 'var(--color-background)',
+		headingLevel: 'h1',
+	},
+	{
+		label: '02',
+		title: 'Sobre mi',
+		description: 'Tu descripcion aca',
+		background: 'var(--color-surface)',
+		headingLevel: 'h2',
+	},
+	{
+		label: '03',
+		title: 'Proyectos',
+		description: 'Tus proyectos aca',
+		background: 'var(--color-background)',
+		headingLevel: 'h2',
+	},
+	{
+		label: '04',
+		title: 'Contacto',
+		description: 'Tu email o formulario',
+		background: 'var(--color-surface)',
+		headingLevel: 'h2',
+	},
+];
+---
+
+<div id="scroller" class="scroller" data-scroller>
+	{
+		slides.map((slide, index) => {
+			const Heading = slide.headingLevel;
+
+			return (
+				<section
+					class:list={['slide', { 'is-active': index === 0 }]}
+					data-index={index}
+					style={`--slide-bg: ${slide.background}`}
+					aria-labelledby={`slide-title-${index}`}
+				>
+					<div class="slide-content">
+						<span class="label">{slide.label}</span>
+						<Heading id={`slide-title-${index}`}>{slide.title}</Heading>
+						<p>{slide.description}</p>
+					</div>
+				</section>
+			);
+		})
+	}
+
+	<nav class="dots" aria-label="Navegacion de secciones">
+		{
+			slides.map((_, index) => (
+				<button
+					class:list={['dot', { active: index === 0 }]}
+					type="button"
+					data-target={index}
+					aria-label={`Ir a seccion ${index + 1}`}
+					aria-current={index === 0 ? 'true' : undefined}
+				/>
+			))
+		}
+	</nav>
+</div>
+
+<style>
+	:global(html),
+	:global(body) {
+		background: #0d0d0d;
+		height: 100%;
+		margin: 0;
+		overflow: hidden;
+		padding: 0;
+	}
+
+	.scroller {
+		--color-background: #0d0d0d;
+		--color-accent: #7c3aed;
+		--color-accent-soft: #a78bfa;
+		--color-text: #f5f5f5;
+		--color-surface: #1a1a2e;
+
+		inset: 0;
+		overflow: hidden;
+		position: fixed;
+	}
+
+	.slide {
+		align-items: center;
+		background: var(--slide-bg);
+		display: flex;
+		inset: 0;
+		justify-content: center;
+		position: absolute;
+		transform: translateY(100%);
+		transition: transform 0.75s cubic-bezier(0.77, 0, 0.175, 1);
+		will-change: transform;
+	}
+
+	.slide.is-before {
+		transform: translateY(-100%);
+	}
+
+	.slide.is-active {
+		transform: translateY(0);
+	}
+
+	.slide-content {
+		color: var(--color-text);
+		padding: 1.5rem;
+		text-align: center;
+	}
+
+	.label {
+		color: var(--color-accent-soft);
+		display: block;
+		font-family: monospace;
+		font-size: 11px;
+		letter-spacing: 4px;
+		margin-bottom: 1rem;
+	}
+
+	.slide-content h1,
+	.slide-content h2 {
+		font-size: clamp(2rem, 6vw, 5rem);
+		font-weight: 400;
+		letter-spacing: 0;
+		margin: 0 0 0.5rem;
+	}
+
+	.slide-content p {
+		color: color-mix(in srgb, var(--color-text) 68%, transparent);
+		font-size: 1rem;
+		margin: 0;
+	}
+
+	.dots {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		position: fixed;
+		right: 2rem;
+		top: 50%;
+		transform: translateY(-50%);
+		z-index: 100;
+	}
+
+	.dot {
+		background: color-mix(in srgb, var(--color-text) 24%, transparent);
+		border: 0;
+		border-radius: 50%;
+		cursor: pointer;
+		height: 6px;
+		padding: 0;
+		transition:
+			background 0.3s,
+			transform 0.3s;
+		width: 6px;
+	}
+
+	.dot.active {
+		background: var(--color-accent);
+		transform: scale(1.4);
+	}
+
+	.dot:focus-visible {
+		outline: 2px solid var(--color-accent-soft);
+		outline-offset: 6px;
+	}
+</style>
+
+<script>
+	const scroller = document.querySelector<HTMLElement>('[data-scroller]');
+	const slides = [...document.querySelectorAll<HTMLElement>('.slide')];
+	const dots = [...document.querySelectorAll<HTMLButtonElement>('.dot')];
+
+	let current = 0;
+	let locked = false;
+	let touchStartY = 0;
+
+	function goTo(index: number) {
+		if (index < 0 || index >= slides.length || locked) return;
+
+		locked = true;
+
+		slides.forEach((slide, slideIndex) => {
+			slide.classList.toggle('is-before', slideIndex < index);
+			slide.classList.toggle('is-active', slideIndex === index);
+		});
+
+		dots.forEach((dot, dotIndex) => {
+			const isActive = dotIndex === index;
+			dot.classList.toggle('active', isActive);
+			dot.toggleAttribute('aria-current', isActive);
+		});
+
+		current = index;
+		window.setTimeout(() => {
+			locked = false;
+		}, 800);
+	}
+
+	window.addEventListener(
+		'wheel',
+		(event) => {
+			if (event.deltaY > 30) goTo(current + 1);
+			if (event.deltaY < -30) goTo(current - 1);
+		},
+		{ passive: true },
+	);
+
+	window.addEventListener(
+		'touchstart',
+		(event) => {
+			touchStartY = event.touches[0].clientY;
+		},
+		{ passive: true },
+	);
+
+	window.addEventListener(
+		'touchend',
+		(event) => {
+			const delta = touchStartY - event.changedTouches[0].clientY;
+
+			if (delta > 50) goTo(current + 1);
+			if (delta < -50) goTo(current - 1);
+		},
+		{ passive: true },
+	);
+
+	window.addEventListener('keydown', (event) => {
+		if (event.key === 'ArrowDown' || event.key === 'PageDown') goTo(current + 1);
+		if (event.key === 'ArrowUp' || event.key === 'PageUp') goTo(current - 1);
+	});
+
+	dots.forEach((dot) => {
+		dot.addEventListener('click', () => {
+			goTo(Number(dot.dataset.target));
+		});
+	});
+
+	scroller?.setAttribute('data-ready', 'true');
+</script>
