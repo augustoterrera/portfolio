@@ -34,8 +34,6 @@ const slides = [
 <div id="scroller" class="scroller" data-scroller>
 	{
 		slides.map((slide, index) => {
-			const Heading = slide.headingLevel;
-
 			return (
 				<section
 					class:list={['slide', { 'is-active': index === 0 }]}
@@ -45,7 +43,13 @@ const slides = [
 				>
 					<div class="slide-content">
 						<span class="label">{slide.label}</span>
-						<Heading id={`slide-title-${index}`}>{slide.title}</Heading>
+						{
+							slide.headingLevel === 'h1' ? (
+								<h1 id={`slide-title-${index}`}>{slide.title}</h1>
+							) : (
+								<h2 id={`slide-title-${index}`}>{slide.title}</h2>
+							)
+						}
 						<p>{slide.description}</p>
 					</div>
 				</section>
